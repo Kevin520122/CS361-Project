@@ -1,0 +1,12 @@
+{%extends "index.html"%}
+{%block title%}Translator Page{%endblock%}
+
+{% block content %}
+<h3>Transformed Output with {{language}} format:</h3>
+
+<ul>
+    {%for header in content%}
+        <li>{{header}}: {{content[header]}}</li>
+    {%endfor%}
+</ul>
+{% endblock %}
