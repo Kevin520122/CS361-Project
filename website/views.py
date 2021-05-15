@@ -2,18 +2,26 @@ from flask import Flask,redirect, url_for, render_template,request, session, Blu
 from bs4 import BeautifulSoup as soup
 import string
 import requests
+import wikipedia
+import json
+from pprint import pprint
+
+from wikipedia.wikipedia import summary
+
 
 #from transformer into translate
 
 views = Blueprint('views', __name__)
 global dataset
-dataset = {}
+summary = {}
 #@views.route('/')
 @views.route("/", methods=["POST", "GET"])
 def getInput():
     if request.method == 'POST':
         #Retrieve the seraching target
         aim = request.form['content']
+        section = request.form["section"]
+        session["section"] = section
         #Store it in session
         session["content"] = aim
         return redirect(url_for("views.scrape"))
@@ -21,16 +29,21 @@ def getInput():
         return render_template("search.html")
 
 @views.route("/scrape", methods=["POST", "GET"])
+
+
+
 def scrape():
     if request.method == 'POST':
         language = request.form['language']
         session["language"] = language
         return redirect(url_for("views.transform"))
     else:
-    
+        #section = request.form["section"]
+        
         content = ""
-        if "content" in session:
+        if "content" in session and "section" in session:
             content = session["content"]
+            section = session["section"]
         else:
             return redirect(url_for("getInput"))
         #Clean and format the content
@@ -52,6 +65,7 @@ def scrape():
         headers = []
         details = []
         info = {}
+        
 
         for row in rows:
             headersHTML = row.find_all('th')
@@ -63,12 +77,28 @@ def scrape():
                     headers.append(header.text)
                     details.append(detail.text)
                     info[header.text] = detail.text
-                    
+        #Fulfill the summary of specific content
+        search_result = wikipedia.page(wikipedia.search(content)[0])
+        summary["summary"] = search_result.summary
+        summary["path"] = "C:\OSU\CS361\WebScrapper\input.json"
+
         dataset = info
         print(dataset)
         session["info"] = info
         session["headers"] = headers
-        return render_template("scrape.html", key=headers, val=details, content=info)
+        session["summary"] = summary
+        #Converts info to json format
+        json_content = json.dumps(info, indent=len(info))
+        json_summary = json.dumps(summary, indent=len(summary))
+        #Transfer infobox
+        with open("scrape.json", "w") as f:
+            f.write(json_content)
+
+        #Transfer paragraphs to Michille
+        with open("input.json", "w") as f:
+            f.write(json_summary)
+        return render_template("scrape.html", key=headers, val=details, content=info, part=section, summary=summary["summary"])
+
 
 '''
 @app.route("/<name>")
@@ -84,12 +114,29 @@ def admin():
 
 @views.route("/transform")
 def transform():
+    
     if "language" in session:
         language = session["language"]
         headers = session["headers"]
         info = session["info"]
+        summary = session["summary"]
+
+        summary.update({"language": language})
+        json_language = json.dumps(summary, indent=len(summary))
+        with open("input.json", "w") as f:
+            f.write(json_language)
+        
+        #Support other language
+        with open("output.txt", "r", encoding="utf8") as f:
+            #Retrieve scraping data(dictionary)
+            content = f.read()
+
         #Insert translate function to translate info/content/dataset
-        return render_template("transform.html", language=language, headers=headers, content=info)
+        
+
+
+
+        return render_template("transform.html", language=language,  content=content)
     else:
         return redirect(url_for("views.scrape"))
 

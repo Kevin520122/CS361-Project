@@ -4,9 +4,16 @@
 {% block content %}
 <h3>Transformed Output with {{language}} format:</h3>
 
+
+
+<p>
+    {{content}}
+</p>
+<!--
 <ul>
     {%for header in content%}
         <li>{{header}}: {{content[header]}}</li>
     {%endfor%}
 </ul>
+-->
 {% endblock %}
