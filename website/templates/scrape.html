@@ -19,14 +19,23 @@
     
     <p>Transalted Language: </p>
     <select name="language" id="language">
-        <option value="Simplified-Chinese">Chinese(Simplified)</option>
-        <option value="Traditional-Chinese">Chinese(Traditional)</option>
-        <option value="Japenese">Hindi</option>
-        <option value="Franch">French</option>
+        <option value="Chinese(simplified)">Chinese(Simplified)</option>
+        <option value="Chinese(traditional)">Chinese(Traditional)</option>
+        <option value="Hindi">Hindi</option>
+        <option value="French">French</option>
         <option value="Arabic">Arabic</option>
+        <option value="Spanish">Spanish</option>
     </select>
     <p>
         <input type="submit" value="submit">
     </p>
 </form>
+
+{%if language%}
+<form action="/transform" method="post">
+    <p>
+        <input type="submit" value="View the translated result">
+    </p>
+</form>
+{%endif%}
 {% endblock %}

@@ -6,6 +6,7 @@ import wikipedia
 import json
 from pprint import pprint
 
+
 from wikipedia.wikipedia import summary
 
 
@@ -13,7 +14,8 @@ from wikipedia.wikipedia import summary
 
 views = Blueprint('views', __name__)
 global dataset
-summary = {}
+inputData = {}
+infobox={}
 #@views.route('/')
 @views.route("/", methods=["POST", "GET"])
 def getInput():
@@ -36,7 +38,14 @@ def scrape():
     if request.method == 'POST':
         language = request.form['language']
         session["language"] = language
-        return redirect(url_for("views.transform"))
+        
+
+        inputData.update({"language": language})
+        json_language = json.dumps(inputData, indent=len(inputData))
+        with open("input.json", "w") as f:
+            f.write(json_language)
+    
+        return render_template("scrape.html", part = session["section"], summary=inputData["summary"], content=infobox, language=language)
     else:
         #section = request.form["section"]
         
@@ -64,7 +73,7 @@ def scrape():
 
         headers = []
         details = []
-        info = {}
+        
         
 
         for row in rows:
@@ -79,25 +88,25 @@ def scrape():
                     info[header.text] = detail.text
         #Fulfill the summary of specific content
         search_result = wikipedia.page(wikipedia.search(content)[0])
-        summary["summary"] = search_result.summary
-        summary["path"] = "C:\OSU\CS361\WebScrapper\input.json"
+        inputData["summary"] = search_result.summary
+        inputData["path"] = "C:\OSU\CS361\WebScrapper\input.json"
 
-        dataset = info
+        dataset = infobox
         print(dataset)
-        session["info"] = info
+        session["info"] = infobox
         session["headers"] = headers
-        session["summary"] = summary
+        session["input"] = inputData
         #Converts info to json format
-        json_content = json.dumps(info, indent=len(info))
-        json_summary = json.dumps(summary, indent=len(summary))
+        json_content = json.dumps(infobox, indent=len(infobox))
+        json_input = json.dumps(inputData, indent=len(inputData))
         #Transfer infobox
         with open("scrape.json", "w") as f:
             f.write(json_content)
 
         #Transfer paragraphs to Michille
         with open("input.json", "w") as f:
-            f.write(json_summary)
-        return render_template("scrape.html", key=headers, val=details, content=info, part=section, summary=summary["summary"])
+            f.write(json_input)
+        return render_template("scrape.html",  content=infobox, part=section, summary=inputData["summary"])
 
 
 '''
@@ -112,31 +121,34 @@ def admin():
     return redirect(url_for("user", name="kevin"))
 '''
 
-@views.route("/transform")
+@views.route("/transform", methods=["POST", "GET"])
 def transform():
-    
-    if "language" in session:
-        language = session["language"]
-        headers = session["headers"]
-        info = session["info"]
-        summary = session["summary"]
+    if request.method == "POST":
+        if "language" in session:
+            language = session["language"]
+            headers = session["headers"]
+            info = session["info"]
+            '''
+            summary = session["summary"]
 
-        summary.update({"language": language})
-        json_language = json.dumps(summary, indent=len(summary))
-        with open("input.json", "w") as f:
-            f.write(json_language)
-        
-        #Support other language
-        with open("output.txt", "r", encoding="utf8") as f:
-            #Retrieve scraping data(dictionary)
-            content = f.read()
+            summary.update({"language": language})
+            json_language = json.dumps(summary, indent=len(summary))
+            with open("input.json", "w") as f:
+                f.write(json_language)
+            '''
+            
+            #Translate in the backend
+            #Support other language
+            with open("output.txt", "r", encoding="utf8") as f:
+                #Retrieve scraping data(dictionary)
+                content = f.read()
 
-        #Insert translate function to translate info/content/dataset
-        
+            #Insert translate function to translate info/content/dataset
+            
 
 
 
-        return render_template("transform.html", language=language,  content=content)
-    else:
-        return redirect(url_for("views.scrape"))
+            return render_template("transform.html", language=language,  content=content)
+        else:
+            return redirect(url_for("views.scrape"))
 
