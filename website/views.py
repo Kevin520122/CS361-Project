@@ -5,6 +5,7 @@ import requests
 import wikipedia
 import json
 from pprint import pprint
+from website import format
 
 
 from wikipedia.wikipedia import summary
@@ -13,9 +14,14 @@ from wikipedia.wikipedia import summary
 #from transformer into translate
 
 views = Blueprint('views', __name__)
+#Global variables
 global dataset
 inputData = {}
 infobox={}
+images={}
+cars = {}
+
+
 #@views.route('/')
 @views.route("/", methods=["POST", "GET"])
 def getInput():
@@ -30,10 +36,62 @@ def getInput():
     else:
         return render_template("search.html")
 
+@views.route("/home")
+def displayHome():
+    return render_template("home.html")
+
+@views.route("/car", methods=["POST", "GET"])
+def car():
+    if request.method == 'POST':
+        session["car"] = request.form["car"]
+        return redirect(url_for("views.scrape_car"))
+    else:
+        return render_template("car.html")
+
+@views.route("/scrape_car", methods=["POST", "GET"])
+def scrape_car():
+    if request.method == "POST":
+        pass
+    else:
+        if "car" in session:
+            brand = session["car"]
+        else:
+            return redirect(url_for("car"))
+
+        #brand = format.formatStr(brand)
+        '''
+        print(brand)
+        print(wikipedia.search(brand))
+        search_result = wikipedia.page(wikipedia.search(brand)[0])
+        print(dir(search_result))
+        print(search_result.html)
+        '''
+        brand = format.formatStr(brand)
+        wikiURL = "https://en.wikipedia.org/wiki/"+brand
+        data = requests.get(wikiURL)
+        #Returns an array containing all the html code
+        contents = soup(data.content, "html.parser")
+        #Returns an array containing infobox html code
+        info = contents("td", {"class":"infobox-image"})[0]
+        #print(info)
+        img = info.find_all("img")[0]
+    
+        #print(imgHTML)
+
+        cars["path"] = "C:\OSU\CS361\WebScrapper\car.json"
+        cars["img"] = "https:"+img["src"]
+        cars["brand"] = brand
+
+        json_car = json.dumps(cars, indent=len(cars))
+        with open("car.json", "w") as f:
+            f.write(json_car)
+
+        return render_template("scrape_car.html", name=brand, img=cars["img"])
+        
+
+
+
 @views.route("/scrape", methods=["POST", "GET"])
-
-
-
 def scrape():
     if request.method == 'POST':
         language = request.form['language']
@@ -46,6 +104,7 @@ def scrape():
             f.write(json_language)
     
         return render_template("scrape.html", part = session["section"], summary=inputData["summary"], content=infobox, language=language)
+
     else:
         #section = request.form["section"]
         
@@ -55,11 +114,17 @@ def scrape():
             section = session["section"]
         else:
             return redirect(url_for("getInput"))
+        
         #Clean and format the content
+        #format.formatStr(content)
+        '''
         capWords = string.capwords(content)
         wordList = capWords.split()
         content = "_".join(wordList)
+        
+        '''
 
+        '''
         wikiURL = "https://en.wikipedia.org/wiki/"+content
         data = requests.get(wikiURL)
         #print(data)
@@ -86,40 +151,34 @@ def scrape():
                     headers.append(header.text)
                     details.append(detail.text)
                     info[header.text] = detail.text
-        #Fulfill the summary of specific content
+        '''
+
+        #Get all the content for Wikipedia
         search_result = wikipedia.page(wikipedia.search(content)[0])
+        #Fulfill the summary of specific content
         inputData["summary"] = search_result.summary
         inputData["path"] = "C:\OSU\CS361\WebScrapper\input.json"
 
-        dataset = infobox
-        print(dataset)
-        session["info"] = infobox
-        session["headers"] = headers
+        images["links"] = search_result.images
+        images["path"] = "C:\OSU\CS361\WebScrapper\image.json"
+
+    
         session["input"] = inputData
         #Converts info to json format
-        json_content = json.dumps(infobox, indent=len(infobox))
+        
         json_input = json.dumps(inputData, indent=len(inputData))
-        #Transfer infobox
-        with open("scrape.json", "w") as f:
-            f.write(json_content)
-
+        json_image = json.dumps(images, indent=len(images))
+        
         #Transfer paragraphs to Michille
         with open("input.json", "w") as f:
             f.write(json_input)
-        return render_template("scrape.html",  content=infobox, part=section, summary=inputData["summary"])
+
+        #Transfer images
+        with open("image.json", "w") as f:
+            f.write(json_image)
+        return render_template("scrape.html",   part=section, summary=inputData["summary"], images=images["links"])
 
 
-'''
-@app.route("/<name>")
-#The name in the url will pass into the function
-def user(name):
-    return  f"Hello {name}"
-
-@app.route("/admin")
-def admin():
-    #return redirect(url_for("home"))
-    return redirect(url_for("user", name="kevin"))
-'''
 
 @views.route("/transform", methods=["POST", "GET"])
 def transform():
@@ -128,14 +187,8 @@ def transform():
             language = session["language"]
             headers = session["headers"]
             info = session["info"]
-            '''
-            summary = session["summary"]
-
-            summary.update({"language": language})
-            json_language = json.dumps(summary, indent=len(summary))
-            with open("input.json", "w") as f:
-                f.write(json_language)
-            '''
+            
+            
             
             #Translate in the backend
             #Support other language

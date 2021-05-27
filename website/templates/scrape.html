@@ -2,40 +2,42 @@
 {%block title%}Searching Page{%endblock%}
 
 {% block content %}
-<h3>Scraping Output: </h3>
-{%if part == "infobox"%}
-<ul>
-    {%for header in content%}
-        <li>{{header}}: {{content[header]}}</li>
-    {%endfor%}
-</ul>
-{%else%}
-<p>
-    {{summary}}
-</p>
-{%endif%}
+    <h3>Scraping Output: </h3>
 
-<form action="#" method="post">
-    
-    <p>Transalted Language: </p>
-    <select name="language" id="language">
-        <option value="Chinese(simplified)">Chinese(Simplified)</option>
-        <option value="Chinese(traditional)">Chinese(Traditional)</option>
-        <option value="Hindi">Hindi</option>
-        <option value="French">French</option>
-        <option value="Arabic">Arabic</option>
-        <option value="Spanish">Spanish</option>
-    </select>
-    <p>
-        <input type="submit" value="submit">
-    </p>
-</form>
+    {% if part == "images" %}
+        <ul>
+            {%for image in images%}
+                <li><img src="{{image}}"></li>
+            {%endfor%}
+        </ul>
+    {%else%}
+        <p>
+            {{summary}}
+        </p>
+    {%endif%}
 
-{%if language%}
-<form action="/transform" method="post">
-    <p>
-        <input type="submit" value="View the translated result">
-    </p>
-</form>
-{%endif%}
+    <form action="#" method="post">
+        
+        <p>Transalted Language: </p>
+        <select name="language" id="language">
+            <option value="Chinese(simplified)">Chinese(Simplified)</option>
+            <option value="Chinese(traditional)">Chinese(Traditional)</option>
+            <option value="Hindi">Hindi</option>
+            <option value="French">French</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Spanish">Spanish</option>
+        </select>
+        <p>
+            <input type="submit" value="submit">
+        </p>
+    </form>
+
+    {%if language%}
+    <form action="/transform" method="post">
+        <p>
+            <input type="submit" value="View the translated result">
+        </p>
+    </form>
+    {%endif%}
+
 {% endblock %}
