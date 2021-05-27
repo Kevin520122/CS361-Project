@@ -58,14 +58,6 @@ def scrape_car():
         else:
             return redirect(url_for("car"))
 
-        #brand = format.formatStr(brand)
-        '''
-        print(brand)
-        print(wikipedia.search(brand))
-        search_result = wikipedia.page(wikipedia.search(brand)[0])
-        print(dir(search_result))
-        print(search_result.html)
-        '''
         brand = format.formatStr(brand)
         wikiURL = "https://en.wikipedia.org/wiki/"+brand
         data = requests.get(wikiURL)
@@ -76,7 +68,6 @@ def scrape_car():
         #print(info)
         img = info.find_all("img")[0]
     
-        #print(imgHTML)
 
         cars["path"] = "C:\OSU\CS361\WebScrapper\car.json"
         cars["img"] = "https:"+img["src"]
